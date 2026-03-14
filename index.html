@@ -518,6 +518,10 @@ function showPage(p,btn){
   document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   btn.classList.add('active');
+  if(p==='aceite'){
+    const fecha=document.getElementById('aceite-fecha').value;
+    if(fecha) renderAceite();
+  }
 }
 
 function calcular(){
@@ -1030,20 +1034,11 @@ async function renderAceiteHistorial(punto) {
   }
 }
 
-// Inicializar fecha y render al abrir pestaña
+// Inicializar fecha al cargar
 (function initAceite(){
   const inp = document.getElementById('aceite-fecha');
   if(inp) inp.value = new Date().toISOString().split('T')[0];
 })();
-
-const _origShowPage = showPage;
-function showPage(p, btn) {
-  _origShowPage(p, btn);
-  if (p==='aceite') {
-    const fecha = document.getElementById('aceite-fecha').value;
-    if (fecha) renderAceite();
-  }
-}
 
 
 </script>
