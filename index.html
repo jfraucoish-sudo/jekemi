@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jekemi — Control de Papas</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --orange:#D94F00;      /* naranja brasa principal */
+  --orange2:#FF6B1A;     /* naranja brasa claro */
+  --cream:#FDF6EC;       /* fondo crema */
+  --cream2:#F5EAD8;      /* crema oscuro para cards */
+  --cream3:#EDD9BC;      /* crema más oscuro para bordes/hover */
+  --brown:#3D1F00;       /* marrón oscuro para texto */
+  --muted:#9A7A5A;       /* marrón medio para subtextos */
+  --card:#FFFAF3;        /* card casi blanco crema */
+  --red:#C0392B;
+  --green:#2E7D32;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--cream);color:var(--brown);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* HEADER */
+header{background:var(--brown);border-bottom:4px solid var(--orange);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:14px;}
+.logo h1{font-family:'Black Han Sans',sans-serif;font-size:24px;color:var(--orange2);letter-spacing:2px;line-height:1;}
+.logo p{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;font-family:'Space Mono',monospace;}
+
+.clock-wrap{text-align:right;}
+#clock-time{font-family:'Black Han Sans',sans-serif;font-size:38px;color:var(--orange2);letter-spacing:3px;line-height:1;}
+#clock-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+
+/* TICKER */
+.ticker{background:var(--orange);padding:7px 0;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;white-space:nowrap;overflow:hidden;color:white;}
+.ticker-inner{display:inline-block;animation:tick 55s linear infinite;}
+@keyframes tick{0%{transform:translateX(100vw);}100%{transform:translateX(-100%);}}
+
+/* TABS */
+.tabs{display:flex;padding:0 32px;border-bottom:2px solid var(--cream3);background:var(--cream2);}
+.tab{padding:14px 20px;background:transparent;border:none;color:var(--muted);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all 0.2s;}
+.tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+
+main{padding:28px 32px;max-width:1100px;margin:0 auto;}
+.page{display:none;}
+.page.active{display:block;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+.form-group{display:flex;flex-direction:column;gap:7px;}
+label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'Space Mono',monospace;}
+select,input[type=date],input[type=time],input[type=number]{background:var(--card);border:2px solid var(--cream3);color:var(--brown);padding:11px 14px;border-radius:10px;font-family:'Syne',sans-serif;font-size:15px;width:100%;outline:none;}
+
+.btn-calc{width:100%;padding:16px;background:var(--orange);color:white;border:none;border-radius:12px;font-family:'Black Han Sans',sans-serif;font-size:19px;letter-spacing:2px;cursor:pointer;margin-bottom:28px;}
+
+.result-section{display:none;}
+.result-section.show{display:block;}
+
+.rcard{background:var(--card);border-radius:14px;padding:20px;border:1px solid var(--cream3);position:relative;margin-bottom:14px;}
+.card-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'Space Mono',monospace;}
+.card-val{font-family:'Black Han Sans',sans-serif;font-size:34px;color:var(--orange);line-height:1;}
+.card-unit{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;}
+
+.tl-section{background:var(--card);border-radius:14px;padding:22px;border:1px solid var(--cream3);margin-bottom:20px;}
+.tl-title{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:1px;margin-bottom:18px;color:var(--brown);}
+.tl-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+.tslot{background:var(--cream2);border-radius:9px;padding:16px;display:flex;justify-content:space-between;align-items:center;border-left:5px solid var(--cream3);}
+.tslot.actual{border:2px solid var(--green);background:rgba(46,125,50,0.07);}
+.tslot.man{border-left-color:var(--orange2);}
+.tslot.tar{border-left-color:var(--orange);}
+.slot-time{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
+.slot-porc{font-size:11px;color:var(--muted);}
+.slot-kg{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--brown);}
+.sb-now{font-size:9px;background:var(--green);color:white;padding:2px 7px;border-radius:8px;margin-top:4px;display:inline-block;}
+
+@media(max-width:768px){
+  .form-grid, .tl-grid{grid-template-columns:1fr;}
+  header{padding:14px 18px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div>
+      <h1>JEKEMI</h1>
+      <p>Control de Papas · La Cabaña 80/20</p>
+    </div>
+  </div>
+  <div class="clock-wrap">
+    <div id="clock-time">00:00:00</div>
+    <div id="clock-date">Cargando...</div>
+  </div>
+</header>
+
+<div class="ticker"><span class="ticker-inner">🥔 Datos reales Ene–Mar · 80/20 BLANQUEO: 320°F × 2:00 min · 🍟 FRITURA FINAL: 370°F × 2:00 min · JEKEMI PAPAS FRESCAS SIEMPRE 🍟</span></div>
+
+<div class="tabs">
+  <button class="tab active">🧮 Calculadora</button>
+</div>
+
+<main>
+  <div class="page active" id="page-calc">
+    <div class="form-grid">
+      <div class="form-group"><label>📍 Punto</label><select id="punto"><option value="plaza">Mi Plaza</option><option value="soacha">Soacha</option></select></div>
+      <div class="form-group"><label>📅 Fecha</label><input type="date" id="fecha"></div>
+      <div class="form-group"><label>⏰ Hora Actual</label><input type="time" id="hora"></div>
+    </div>
+    <button class="btn-calc" onclick="calcular()">🍟 CALCULAR PRODUCCIÓN</button>
+
+    <div class="result-section" id="resultado">
+      <div class="rcard">
+        <div class="card-lbl">Total Día Completo</div>
+        <div class="card-val" id="c-total-kg">0 kg</div>
+        <div class="card-unit" id="c-total-p">0 porciones</div>
+      </div>
+
+      <div class="tl-section">
+        <div class="tl-title">⏱️ Resumen de Producción por Turno</div>
+        <div class="tl-grid" id="tl-grid">
+          </div>
+      </div>
+      
+      <div style="background:var(--cream2); padding:15px; border-radius:10px; font-size:13px; line-height:1.5;">
+        <strong>📌 Recordatorio Operativo:</strong><br>
+        1. 🌅 <strong>Picado Apertura:</strong> Para el mediodía.<br>
+        2. 🌆 <strong>Picado Tarde:</strong> Antes del pico nocturno.<br>
+        🌡️ Blanqueo: <strong>320°F</strong> | Fritura: <strong>370°F</strong>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Base de datos de distribución horaria
+const distH=[
+  {h:12,pct:0.0126},{h:13,pct:0.0457},{h:14,pct:0.0691},
+  {h:15,pct:0.0588},{h:16,pct:0.0679},{h:17,pct:0.0830},
+  {h:18,pct:0.1464},{h:19,pct:0.1911},{h:20,pct:0.1928},
+  {h:21,pct:0.1218},{h:22,pct:0.0109},
+];
+
+// Configuración base (ajustable)
+let cfg = { med: 240, merma: 15, buf: 10 };
+
+function kg(p){ return p * cfg.med / (1 - cfg.merma/100) * (1 + cfg.buf/100) / 1000; }
+
+function calcular(){
+  const fecha = document.getElementById('fecha').value;
+  const hora = document.getElementById('hora').value;
+  if(!fecha || !hora){ alert('Ingresa fecha y hora'); return; }
+
+  const [hh, mm] = hora.split(':').map(Number);
+  const hD = hh + mm/60;
+
+  // Porciones base (puedes conectar esto a tu lógica de quincenas/días si deseas)
+  const p = 80; 
+  const kgTotal = kg(p);
+
+  document.getElementById('c-total-kg').textContent = kgTotal.toFixed(1) + " kg";
+  document.getElementById('c-total-p').textContent = p + " porciones estimadas";
+
+  // Lógica de agrupación por turnos
+  const pctApertura = distH.filter(f => f.h >= 12 && f.h < 17).reduce((a, f) => a + f.pct, 0);
+  const pctCierre = distH.filter(f => f.h >= 17).reduce((a, f) => a + f.pct, 0);
+
+  const pApe = Math.round(p * pctApertura);
+  const pCie = Math.round(p * pctCierre);
+
+  const grid = document.getElementById('tl-grid');
+  grid.innerHTML = `
+    <div class="tslot man ${hD < 17 ? 'actual' : 'pasado'}">
+      <div>
+        <div class="slot-time">🌅 APERTURA (12pm - 5pm)</div>
+        <div class="slot-porc">${pApe} porciones estimadas</div>
+        ${hD < 17 ? '<span class="sb-now">▶ TURNO ACTUAL</span>' : ''}
+      </div>
+      <div style="text-align:right">
+        <div class="slot-kg">${kg(pApe).toFixed(1)} kg</div>
+      </div>
+    </div>
+
+    <div class="tslot tar ${hD >= 17 ? 'actual' : ''}">
+      <div>
+        <div class="slot-time">🌆 CIERRE (5pm - Cierre)</div>
+        <div class="slot-porc">${pCie} porciones estimadas</div>
+        ${hD >= 17 ? '<span class="sb-now">▶ TURNO ACTUAL</span>' : ''}
+      </div>
+      <div style="text-align:right">
+        <div class="slot-kg">${kg(pCie).toFixed(1)} kg</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('resultado').classList.add('show');
+}
+
+function updateClock(){
+  const n = new Date();
+  document.getElementById('clock-time').textContent = n.toLocaleTimeString();
+  document.getElementById('clock-date').textContent = n.toLocaleDateString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Iniciar con fecha de hoy
+document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
