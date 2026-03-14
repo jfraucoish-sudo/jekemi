@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.googleapis.com https://fonts.gstatic.com data:;">
 <title>Jekemi — Control de Papas</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -144,7 +145,34 @@ select option{background:var(--cream);}
 .inp-item input[type=number]:focus{border-color:var(--orange);}
 .btn-save{margin-top:14px;width:100%;padding:11px;background:var(--cream2);border:2px solid var(--orange);color:var(--orange);border-radius:9px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;}
 .btn-save:hover{background:var(--orange);color:white;}
-@media(max-width:768px){.form-grid{grid-template-columns:1fr 1fr;}.cards-grid{grid-template-columns:1fr 1fr;}.tl-grid{grid-template-columns:1fr;}.proy-grid{grid-template-columns:1fr;}.aj-grid{grid-template-columns:1fr;}header{padding:14px 18px;}main{padding:18px 16px;}.tabs{padding:0 16px;overflow-x:auto;}#clock-time{font-size:26px;}}
+/* ACEITE MODULE */
+.aceite-card{background:var(--card);border-radius:14px;padding:22px;border:1px solid var(--cream3);box-shadow:0 2px 8px rgba(61,31,0,0.06);margin-bottom:16px;}
+.aceite-card h3{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--orange);letter-spacing:1px;margin-bottom:3px;}
+.aceite-card p{font-size:11px;color:var(--muted);margin-bottom:16px;font-family:'Space Mono',monospace;}
+.check-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--cream2);}
+.check-row:last-child{border-bottom:none;}
+.check-label{font-size:14px;color:var(--brown);flex:1;}
+.check-btns{display:flex;gap:8px;}
+.cbtn{padding:7px 18px;border-radius:8px;border:2px solid var(--cream3);background:var(--cream2);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all 0.18s;}
+.cbtn.si{border-color:var(--green);background:#e8f5e9;color:var(--green);}
+.cbtn.no{border-color:var(--red);background:#fdecea;color:var(--red);}
+.cbtn:hover{transform:translateY(-1px);}
+.freidora-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--cream2);}
+.freidora-row:last-child{border-bottom:none;}
+.fr-label{font-size:14px;color:var(--brown);font-weight:600;}
+.fr-input{width:100%;padding:9px 12px;border-radius:8px;border:2px solid var(--cream3);background:var(--cream2);font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--brown);text-align:center;outline:none;}
+.fr-input:focus{border-color:var(--orange);}
+.fr-repone{font-family:'Black Han Sans',sans-serif;font-size:18px;text-align:center;}
+.fr-repone.ok{color:var(--green);}
+.fr-repone.warn{color:var(--red);}
+.save-btn-aceite{width:100%;padding:13px;background:var(--orange);color:white;border:none;border-radius:10px;font-family:'Black Han Sans',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;margin-top:14px;}
+.save-btn-aceite:hover{background:var(--brown);color:var(--orange2);}
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-radius:8px;background:var(--cream2);margin-bottom:6px;font-size:13px;}
+.hist-row-date{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+.badge-miroil{display:inline-flex;align-items:center;gap:5px;background:rgba(217,79,0,0.1);border:1px solid rgba(217,79,0,0.3);color:var(--orange);padding:4px 12px;border-radius:20px;font-size:11px;font-family:'Space Mono',monospace;font-weight:700;}
+.badge-dia-aplica{background:#e8f5e9;border:1px solid #a5d6a7;color:var(--green);}
+.badge-dia-no{background:var(--cream2);border:1px solid var(--cream3);color:var(--muted);}
+{.form-grid{grid-template-columns:1fr 1fr;}.cards-grid{grid-template-columns:1fr 1fr;}.tl-grid{grid-template-columns:1fr;}.proy-grid{grid-template-columns:1fr;}.aj-grid{grid-template-columns:1fr;}header{padding:14px 18px;}main{padding:18px 16px;}.tabs{padding:0 16px;overflow-x:auto;}#clock-time{font-size:26px;}}
 /* LOGIN */
 #login-overlay{position:fixed;inset:0;background:var(--brown);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;}
 .login-box{background:var(--cream);border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
@@ -198,6 +226,7 @@ select option{background:var(--cream);}
   <button class="tab" onclick="showPage('hist',this)">📅 Historial</button>
   <button class="tab" onclick="showPage('proy',this)">📈 Proyección</button>
   <button class="tab" onclick="showPage('aj',this)">⚙️ Config</button>
+  <button class="tab" onclick="showPage('aceite',this)">🛢️ Aceite</button>
 </div>
 
 <main>
@@ -334,6 +363,45 @@ select option{background:var(--cream);}
         <div class="inp-item"><label>Domingo</label><input type="number" id="soacha-do" value="50"></div>
         <button class="btn-save" onclick="guardar(this)">💾 Guardar</button>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ACEITE PAGE -->
+<div class="page" id="page-aceite">
+  <div style="margin-top:24px">
+    <div class="hist-title">🛢️ Control de Aceite — MirOil L103</div>
+    <div class="hist-sub" style="margin-bottom:20px">Estabilizador de aceite en polvo · 80ml por aplicación · 2 freidoras por punto · 20L por freidora</div>
+
+    <!-- Selector de punto y fecha -->
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-end;">
+      <div class="form-group" style="min-width:180px">
+        <label>📍 Punto de Venta</label>
+        <select id="aceite-punto" onchange="renderAceite()">
+          <option value="plaza">🏪 Mi Plaza</option>
+          <option value="soacha">🏪 Soacha</option>
+        </select>
+      </div>
+      <div class="form-group" style="min-width:160px">
+        <label>📅 Fecha</label>
+        <input type="date" id="aceite-fecha" onchange="renderAceite()">
+      </div>
+    </div>
+
+    <!-- Indicador del día -->
+    <div id="aceite-dia-badge" style="margin-bottom:20px"></div>
+
+    <!-- Checklist del día -->
+    <div id="aceite-checklist"></div>
+
+    <!-- Registro de aceite -->
+    <div id="aceite-freidoras"></div>
+
+    <!-- Historial -->
+    <div style="margin-top:28px">
+      <div style="font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--orange);letter-spacing:1px;margin-bottom:14px">📋 Historial reciente</div>
+      <div id="aceite-historial"></div>
     </div>
   </div>
 </div>
@@ -484,7 +552,7 @@ function calcular(){
   document.getElementById('res-titulo').textContent=DOWNAMES[monDow]+' '+day+' de '+MNAMES[mes];
   let bhtml=`<div class="badge b-${punto}">${punto==='plaza'?'🏪 Mi Plaza':'🏪 Soacha'}</div>`;
   if(isQ(day)) bhtml+='<div class="badge b-quinc">💰 Quincena +24%</div>';
-  if(monDow>=4) bhtml+='<div class="badge b-finde">🔥 '+(monDow===4?'Viernes':'monDow===5'?'Sábado':'Domingo')+'</div>';
+  if(monDow>=4) bhtml+='<div class="badge b-finde">🔥 '+(monDow===4?'Viernes':monDow===5?'Sábado':'Domingo')+'</div>';
   document.getElementById('res-badges').innerHTML=bhtml;
 
   const pctR=distH.filter(f=>f.h>=Math.floor(hD)).reduce((a,f)=>a+f.pct,0);
@@ -759,6 +827,199 @@ function verificarClave(){
     setTimeout(()=>document.getElementById('login-input').focus(),300);
   }
 })();
+// ==================== MÓDULO ACEITE MIROIL ====================
+// Días que aplica MirOil: Lun(1), Mié(3), Vie(5), Sáb(6), Dom(0) — JS getDay()
+const MIROIL_DIAS_JS = [0, 1, 3, 5, 6]; // Dom, Lun, Mié, Vie, Sáb
+const MIROIL_NOMBRES = {0:'Domingo',1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes',6:'Sábado'};
+const MIROIL_ML = 80;
+const ACEITE_LITROS = 20;
+const NUM_FREIDORAS = 2;
+
+function esAplicaMirOil(fecha) {
+  const d = new Date(fecha + 'T12:00:00');
+  return MIROIL_DIAS_JS.includes(d.getDay());
+}
+
+function getAceiteKey(punto, fecha) {
+  return 'aceite_' + punto + '_' + fecha;
+}
+
+function loadAceiteData(punto, fecha) {
+  try {
+    const raw = localStorage.getItem(getAceiteKey(punto, fecha));
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function saveAceiteData(punto, fecha, data) {
+  try {
+    localStorage.setItem(getAceiteKey(punto, fecha), JSON.stringify(data));
+  } catch(e) {}
+}
+
+function renderAceite() {
+  const punto = document.getElementById('aceite-punto').value;
+  const fecha = document.getElementById('aceite-fecha').value;
+  if (!fecha) return;
+
+  const aplica = esAplicaMirOil(fecha);
+  const d = new Date(fecha + 'T12:00:00');
+  const diaNombre = MIROIL_NOMBRES[d.getDay()];
+  const data = loadAceiteData(punto, fecha) || {};
+
+  // Badge del día
+  const badgeEl = document.getElementById('aceite-dia-badge');
+  if (aplica) {
+    badgeEl.innerHTML = `<div class="badge-miroil badge-dia-aplica" style="font-size:13px;padding:8px 18px;border-radius:12px;">
+      ✅ ${diaNombre} — DÍA DE APLICAR MirOil · ${MIROIL_ML}ml a 320°F en apertura
+    </div>`;
+  } else {
+    badgeEl.innerHTML = `<div class="badge-miroil badge-dia-no" style="font-size:13px;padding:8px 18px;border-radius:12px;">
+      ⏭️ ${diaNombre} — No aplica MirOil hoy · Próximos días: Lun · Mié · Vie · Sáb · Dom
+    </div>`;
+  }
+
+  // Checklist
+  const chkEl = document.getElementById('aceite-checklist');
+  let chkHtml = `<div class="aceite-card">
+    <h3>✅ Confirmaciones del día</h3>
+    <p>${diaNombre.toUpperCase()} · ${punto === 'plaza' ? 'Mi Plaza' : 'Soacha'} · ${fecha}</p>`;
+
+  if (aplica) {
+    const aplicado = data.miroil_aplicado;
+    chkHtml += `<div class="check-row">
+      <div class="check-label">🛢️ ¿Se aplicó MirOil L103? (${MIROIL_ML}ml a 320°F · apertura)</div>
+      <div class="check-btns">
+        <button class="cbtn ${aplicado===true?'si':''}" onclick="setCheck('miroil_aplicado',true,'${punto}','${fecha}')">✅ SÍ</button>
+        <button class="cbtn ${aplicado===false?'no':''}" onclick="setCheck('miroil_aplicado',false,'${punto}','${fecha}')">❌ NO</button>
+      </div>
+    </div>`;
+  }
+
+  const filtrado = data.aceite_filtrado;
+  chkHtml += `<div class="check-row">
+    <div class="check-label">🔍 ¿Se filtró el aceite del día anterior?</div>
+    <div class="check-btns">
+      <button class="cbtn ${filtrado===true?'si':''}" onclick="setCheck('aceite_filtrado',true,'${punto}','${fecha}')">✅ SÍ</button>
+      <button class="cbtn ${filtrado===false?'no':''}" onclick="setCheck('aceite_filtrado',false,'${punto}','${fecha}')">❌ NO</button>
+    </div>
+  </div>`;
+
+  chkHtml += `</div>`;
+  chkEl.innerHTML = chkHtml;
+
+  // Freidoras
+  const frEl = document.getElementById('aceite-freidoras');
+  let frHtml = `<div class="aceite-card">
+    <h3>🔥 Nivel de Aceite — Freidoras</h3>
+    <p>Capacidad ideal: ${ACEITE_LITROS}L por freidora · ${NUM_FREIDORAS} freidoras en servicio</p>
+    <div class="freidora-row" style="background:var(--cream2);border-radius:8px;padding:10px 14px;margin-bottom:4px;">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'Space Mono',monospace;">FREIDORA</div>
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'Space Mono',monospace;text-align:center;">NIVEL ACTUAL (L)</div>
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'Space Mono',monospace;text-align:center;">A REPONER</div>
+    </div>`;
+
+  for (let i = 1; i <= NUM_FREIDORAS; i++) {
+    const nivelKey = 'freidora' + i + '_nivel';
+    const nivel = data[nivelKey] !== undefined ? data[nivelKey] : '';
+    const reponer = nivel !== '' ? Math.max(0, ACEITE_LITROS - parseFloat(nivel || 0)) : '—';
+    const reponerClass = nivel !== '' && reponer > 5 ? 'warn' : 'ok';
+    const reponerTxt = nivel !== '' ? (reponer === 0 ? '✅ Completa' : reponer.toFixed(1) + ' L') : '—';
+    frHtml += `<div class="freidora-row">
+      <div class="fr-label">🔥 Freidora ${i}</div>
+      <div><input class="fr-input" type="number" min="0" max="20" step="0.5"
+        id="fr-nivel-${i}" value="${nivel}" placeholder="0–20"
+        oninput="updateRepone(${i},'${punto}','${fecha}')"></div>
+      <div class="fr-repone ${reponerClass}" id="fr-repone-${i}">${reponerTxt}</div>
+    </div>`;
+  }
+
+  frHtml += `<button class="save-btn-aceite" onclick="guardarAceite('${punto}','${fecha}')">💾 GUARDAR REGISTRO DEL DÍA</button>
+  </div>`;
+  frEl.innerHTML = frHtml;
+
+  renderAceiteHistorial(punto);
+}
+
+function updateRepone(i, punto, fecha) {
+  const val = parseFloat(document.getElementById('fr-nivel-' + i).value);
+  const el = document.getElementById('fr-repone-' + i);
+  if (isNaN(val)) { el.textContent = '—'; el.className = 'fr-repone'; return; }
+  const rep = Math.max(0, ACEITE_LITROS - val);
+  el.textContent = rep === 0 ? '✅ Completa' : rep.toFixed(1) + ' L';
+  el.className = 'fr-repone ' + (rep > 5 ? 'warn' : 'ok');
+}
+
+function setCheck(campo, valor, punto, fecha) {
+  const data = loadAceiteData(punto, fecha) || {};
+  data[campo] = valor;
+  saveAceiteData(punto, fecha, data);
+  renderAceite();
+}
+
+function guardarAceite(punto, fecha) {
+  const data = loadAceiteData(punto, fecha) || {};
+  for (let i = 1; i <= NUM_FREIDORAS; i++) {
+    const inp = document.getElementById('fr-nivel-' + i);
+    if (inp && inp.value !== '') data['freidora' + i + '_nivel'] = parseFloat(inp.value);
+  }
+  data.guardado_en = new Date().toISOString();
+  saveAceiteData(punto, fecha, data);
+  const btn = document.querySelector('.save-btn-aceite');
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✅ ¡GUARDADO!';
+    btn.style.background = 'var(--green)';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; renderAceiteHistorial(punto); }, 1800);
+  }
+}
+
+function renderAceiteHistorial(punto) {
+  const histEl = document.getElementById('aceite-historial');
+  const registros = [];
+  for (let k in localStorage) {
+    if (k.startsWith('aceite_' + punto + '_')) {
+      const fecha = k.replace('aceite_' + punto + '_', '');
+      try {
+        const d = JSON.parse(localStorage.getItem(k));
+        registros.push({ fecha, ...d });
+      } catch(e) {}
+    }
+  }
+  registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+  const recientes = registros.slice(0, 10);
+  if (!recientes.length) { histEl.innerHTML = '<div style="color:var(--muted);font-size:13px;font-family:Space Mono,monospace;padding:10px 0;">Sin registros aún. Guarda el primer día.</div>'; return; }
+
+  let html = '';
+  recientes.forEach(r => {
+    const aplica = esAplicaMirOil(r.fecha);
+    const dObj = new Date(r.fecha + 'T12:00:00');
+    const diaNom = MIROIL_NOMBRES[dObj.getDay()];
+    const miroilOk = r.miroil_aplicado === true;
+    const miroilNo = r.miroil_aplicado === false;
+    const filtOk = r.aceite_filtrado === true;
+    const litros = [1,2].map(i => r['freidora'+i+'_nivel'] !== undefined ? r['freidora'+i+'_nivel']+'L' : '—').join(' · ');
+
+    html += `<div class="hist-row">
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--brown)">${diaNom} ${r.fecha}</div>
+        <div class="hist-row-date">Freidoras: ${litros}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+        ${aplica ? `<span style="font-size:11px;padding:3px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-weight:700;background:${miroilOk?'#e8f5e9':miroilNo?'#fdecea':'var(--cream2)'};color:${miroilOk?'var(--green)':miroilNo?'var(--red)':'var(--muted)'}">🛢️ ${miroilOk?'MirOil ✅':miroilNo?'MirOil ❌':'MirOil ?'}</span>` : ''}
+        <span style="font-size:11px;padding:3px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-weight:700;background:${filtOk?'#e8f5e9':r.aceite_filtrado===false?'#fdecea':'var(--cream2)'};color:${filtOk?'var(--green)':r.aceite_filtrado===false?'var(--red)':'var(--muted)'}">🔍 ${filtOk?'Filtrado ✅':r.aceite_filtrado===false?'Filtrado ❌':'Filtrado ?'}</span>
+      </div>
+    </div>`;
+  });
+  histEl.innerHTML = html;
+}
+
+// Inicializar fecha de aceite al cargar
+(function initAceite(){
+  const inp = document.getElementById('aceite-fecha');
+  if(inp) { const n=new Date(); inp.value=n.toISOString().split('T')[0]; }
+})();
+
 </script>
 </body>
 </html>
