@@ -187,6 +187,9 @@ select option{background:var(--cream);}
 .login-shake{animation:shake 0.4s ease;}
 @keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
 </style>
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -827,9 +830,20 @@ function verificarClave(){
     setTimeout(()=>document.getElementById('login-input').focus(),300);
   }
 })();
+// ==================== FIREBASE ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyBkcwiIn7VYCW2-2Xt1IGAlu-cmQrIAaFw",
+  authDomain: "app-papa-df2cf.firebaseapp.com",
+  projectId: "app-papa-df2cf",
+  storageBucket: "app-papa-df2cf.firebasestorage.app",
+  messagingSenderId: "395769978325",
+  appId: "1:395769978325:web:dffb9068170a2b1953f15c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // ==================== MÓDULO ACEITE MIROIL ====================
-// Días que aplica MirOil: Lun(1), Mié(3), Vie(5), Sáb(6), Dom(0) — JS getDay()
-const MIROIL_DIAS_JS = [0, 1, 3, 5, 6]; // Dom, Lun, Mié, Vie, Sáb
+const MIROIL_DIAS_JS = [0, 1, 3, 5, 6];
 const MIROIL_NOMBRES = {0:'Domingo',1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes',6:'Sábado'};
 const MIROIL_ML = 80;
 const ACEITE_LITROS = 20;
@@ -840,24 +854,24 @@ function esAplicaMirOil(fecha) {
   return MIROIL_DIAS_JS.includes(d.getDay());
 }
 
-function getAceiteKey(punto, fecha) {
-  return 'aceite_' + punto + '_' + fecha;
+function getAceiteDocId(punto, fecha) {
+  return punto + '_' + fecha;
 }
 
-function loadAceiteData(punto, fecha) {
+async function loadAceiteData(punto, fecha) {
   try {
-    const raw = localStorage.getItem(getAceiteKey(punto, fecha));
-    return raw ? JSON.parse(raw) : null;
-  } catch(e) { return null; }
+    const doc = await db.collection('aceite').doc(getAceiteDocId(punto, fecha)).get();
+    return doc.exists ? doc.data() : null;
+  } catch(e) { console.error('Error cargando:', e); return null; }
 }
 
-function saveAceiteData(punto, fecha, data) {
+async function saveAceiteData(punto, fecha, data) {
   try {
-    localStorage.setItem(getAceiteKey(punto, fecha), JSON.stringify(data));
-  } catch(e) {}
+    await db.collection('aceite').doc(getAceiteDocId(punto, fecha)).set(data, { merge: true });
+  } catch(e) { console.error('Error guardando:', e); }
 }
 
-function renderAceite() {
+async function renderAceite() {
   const punto = document.getElementById('aceite-punto').value;
   const fecha = document.getElementById('aceite-fecha').value;
   if (!fecha) return;
@@ -865,7 +879,6 @@ function renderAceite() {
   const aplica = esAplicaMirOil(fecha);
   const d = new Date(fecha + 'T12:00:00');
   const diaNombre = MIROIL_NOMBRES[d.getDay()];
-  const data = loadAceiteData(punto, fecha) || {};
 
   // Badge del día
   const badgeEl = document.getElementById('aceite-dia-badge');
@@ -878,6 +891,12 @@ function renderAceite() {
       ⏭️ ${diaNombre} — No aplica MirOil hoy · Próximos días: Lun · Mié · Vie · Sáb · Dom
     </div>`;
   }
+
+  // Mostrar skeleton mientras carga
+  document.getElementById('aceite-checklist').innerHTML = `<div style="color:var(--muted);font-family:'Space Mono',monospace;font-size:12px;padding:12px 0;">⏳ Cargando datos...</div>`;
+  document.getElementById('aceite-freidoras').innerHTML = '';
+
+  const data = await loadAceiteData(punto, fecha) || {};
 
   // Checklist
   const chkEl = document.getElementById('aceite-checklist');
@@ -903,9 +922,7 @@ function renderAceite() {
       <button class="cbtn ${filtrado===true?'si':''}" onclick="setCheck('aceite_filtrado',true,'${punto}','${fecha}')">✅ SÍ</button>
       <button class="cbtn ${filtrado===false?'no':''}" onclick="setCheck('aceite_filtrado',false,'${punto}','${fecha}')">❌ NO</button>
     </div>
-  </div>`;
-
-  chkHtml += `</div>`;
+  </div></div>`;
   chkEl.innerHTML = chkHtml;
 
   // Freidoras
@@ -920,105 +937,114 @@ function renderAceite() {
     </div>`;
 
   for (let i = 1; i <= NUM_FREIDORAS; i++) {
-    const nivelKey = 'freidora' + i + '_nivel';
-    const nivel = data[nivelKey] !== undefined ? data[nivelKey] : '';
-    const reponer = nivel !== '' ? Math.max(0, ACEITE_LITROS - parseFloat(nivel || 0)) : '—';
-    const reponerClass = nivel !== '' && reponer > 5 ? 'warn' : 'ok';
-    const reponerTxt = nivel !== '' ? (reponer === 0 ? '✅ Completa' : reponer.toFixed(1) + ' L') : '—';
+    const nivel = data['freidora'+i+'_nivel'] !== undefined ? data['freidora'+i+'_nivel'] : '';
+    const reponer = nivel !== '' ? Math.max(0, ACEITE_LITROS - parseFloat(nivel||0)) : null;
+    const reponerClass = reponer !== null && reponer > 5 ? 'warn' : 'ok';
+    const reponerTxt = reponer !== null ? (reponer === 0 ? '✅ Completa' : reponer.toFixed(1)+' L') : '—';
     frHtml += `<div class="freidora-row">
       <div class="fr-label">🔥 Freidora ${i}</div>
       <div><input class="fr-input" type="number" min="0" max="20" step="0.5"
         id="fr-nivel-${i}" value="${nivel}" placeholder="0–20"
-        oninput="updateRepone(${i},'${punto}','${fecha}')"></div>
+        oninput="updateRepone(${i})"></div>
       <div class="fr-repone ${reponerClass}" id="fr-repone-${i}">${reponerTxt}</div>
     </div>`;
   }
 
-  frHtml += `<button class="save-btn-aceite" onclick="guardarAceite('${punto}','${fecha}')">💾 GUARDAR REGISTRO DEL DÍA</button>
-  </div>`;
+  frHtml += `<button class="save-btn-aceite" onclick="guardarAceite('${punto}','${fecha}')">💾 GUARDAR REGISTRO</button></div>`;
   frEl.innerHTML = frHtml;
 
   renderAceiteHistorial(punto);
 }
 
-function updateRepone(i, punto, fecha) {
-  const val = parseFloat(document.getElementById('fr-nivel-' + i).value);
-  const el = document.getElementById('fr-repone-' + i);
-  if (isNaN(val)) { el.textContent = '—'; el.className = 'fr-repone'; return; }
+function updateRepone(i) {
+  const val = parseFloat(document.getElementById('fr-nivel-'+i).value);
+  const el = document.getElementById('fr-repone-'+i);
+  if (isNaN(val)) { el.textContent='—'; el.className='fr-repone'; return; }
   const rep = Math.max(0, ACEITE_LITROS - val);
-  el.textContent = rep === 0 ? '✅ Completa' : rep.toFixed(1) + ' L';
-  el.className = 'fr-repone ' + (rep > 5 ? 'warn' : 'ok');
+  el.textContent = rep===0 ? '✅ Completa' : rep.toFixed(1)+' L';
+  el.className = 'fr-repone '+(rep>5?'warn':'ok');
 }
 
-function setCheck(campo, valor, punto, fecha) {
-  const data = loadAceiteData(punto, fecha) || {};
-  data[campo] = valor;
-  saveAceiteData(punto, fecha, data);
+async function setCheck(campo, valor, punto, fecha) {
+  const update = { [campo]: valor, actualizado_en: new Date().toISOString() };
+  await saveAceiteData(punto, fecha, update);
   renderAceite();
 }
 
-function guardarAceite(punto, fecha) {
-  const data = loadAceiteData(punto, fecha) || {};
-  for (let i = 1; i <= NUM_FREIDORAS; i++) {
-    const inp = document.getElementById('fr-nivel-' + i);
-    if (inp && inp.value !== '') data['freidora' + i + '_nivel'] = parseFloat(inp.value);
+async function guardarAceite(punto, fecha) {
+  const data = { guardado_en: new Date().toISOString() };
+  for (let i=1; i<=NUM_FREIDORAS; i++) {
+    const inp = document.getElementById('fr-nivel-'+i);
+    if (inp && inp.value !== '') data['freidora'+i+'_nivel'] = parseFloat(inp.value);
   }
-  data.guardado_en = new Date().toISOString();
-  saveAceiteData(punto, fecha, data);
   const btn = document.querySelector('.save-btn-aceite');
+  if (btn) { btn.textContent='⏳ Guardando...'; btn.disabled=true; }
+  await saveAceiteData(punto, fecha, data);
   if (btn) {
-    const orig = btn.textContent;
-    btn.textContent = '✅ ¡GUARDADO!';
-    btn.style.background = 'var(--green)';
-    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; renderAceiteHistorial(punto); }, 1800);
+    btn.textContent='✅ ¡GUARDADO!';
+    btn.style.background='var(--green)';
+    setTimeout(()=>{ btn.textContent='💾 GUARDAR REGISTRO'; btn.style.background=''; btn.disabled=false; renderAceiteHistorial(punto); }, 1800);
   }
 }
 
-function renderAceiteHistorial(punto) {
+async function renderAceiteHistorial(punto) {
   const histEl = document.getElementById('aceite-historial');
-  const registros = [];
-  for (let k in localStorage) {
-    if (k.startsWith('aceite_' + punto + '_')) {
-      const fecha = k.replace('aceite_' + punto + '_', '');
-      try {
-        const d = JSON.parse(localStorage.getItem(k));
-        registros.push({ fecha, ...d });
-      } catch(e) {}
-    }
+  histEl.innerHTML = `<div style="color:var(--muted);font-family:'Space Mono',monospace;font-size:12px;padding:8px 0;">⏳ Cargando historial...</div>`;
+  try {
+    const snap = await db.collection('aceite')
+      .where('__name__', '>=', punto+'_')
+      .where('__name__', '<=', punto+'_\uf8ff')
+      .orderBy('__name__', 'desc')
+      .limit(10)
+      .get();
+
+    if (snap.empty) { histEl.innerHTML='<div style="color:var(--muted);font-size:13px;font-family:Space Mono,monospace;padding:10px 0;">Sin registros aún.</div>'; return; }
+
+    let html='';
+    snap.forEach(doc => {
+      const r = doc.data();
+      const fecha = doc.id.replace(punto+'_','');
+      const aplica = esAplicaMirOil(fecha);
+      const dObj = new Date(fecha+'T12:00:00');
+      const diaNom = MIROIL_NOMBRES[dObj.getDay()];
+      const litros = [1,2].map(i=>r['freidora'+i+'_nivel']!==undefined?r['freidora'+i+'_nivel']+'L':'—').join(' · ');
+      const miroilOk = r.miroil_aplicado===true;
+      const miroilNo = r.miroil_aplicado===false;
+      const filtOk = r.aceite_filtrado===true;
+      const filtNo = r.aceite_filtrado===false;
+      html+=`<div class="hist-row">
+        <div>
+          <div style="font-weight:700;font-size:13px;color:var(--brown)">${diaNom} ${fecha}</div>
+          <div class="hist-row-date">Freidoras: ${litros}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+          ${aplica?`<span style="font-size:11px;padding:3px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-weight:700;background:${miroilOk?'#e8f5e9':miroilNo?'#fdecea':'var(--cream2)'};color:${miroilOk?'var(--green)':miroilNo?'var(--red)':'var(--muted)'}">🛢️ ${miroilOk?'MirOil ✅':miroilNo?'MirOil ❌':'MirOil ?'}</span>`:''}
+          <span style="font-size:11px;padding:3px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-weight:700;background:${filtOk?'#e8f5e9':filtNo?'#fdecea':'var(--cream2)'};color:${filtOk?'var(--green)':filtNo?'var(--red)':'var(--muted)'}">🔍 ${filtOk?'Filtrado ✅':filtNo?'Filtrado ❌':'Filtrado ?'}</span>
+        </div>
+      </div>`;
+    });
+    histEl.innerHTML = html;
+  } catch(e) {
+    histEl.innerHTML=`<div style="color:var(--red);font-size:13px;font-family:Space Mono,monospace;padding:10px 0;">⚠️ Error cargando historial. Revisa conexión.</div>`;
+    console.error(e);
   }
-  registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
-  const recientes = registros.slice(0, 10);
-  if (!recientes.length) { histEl.innerHTML = '<div style="color:var(--muted);font-size:13px;font-family:Space Mono,monospace;padding:10px 0;">Sin registros aún. Guarda el primer día.</div>'; return; }
-
-  let html = '';
-  recientes.forEach(r => {
-    const aplica = esAplicaMirOil(r.fecha);
-    const dObj = new Date(r.fecha + 'T12:00:00');
-    const diaNom = MIROIL_NOMBRES[dObj.getDay()];
-    const miroilOk = r.miroil_aplicado === true;
-    const miroilNo = r.miroil_aplicado === false;
-    const filtOk = r.aceite_filtrado === true;
-    const litros = [1,2].map(i => r['freidora'+i+'_nivel'] !== undefined ? r['freidora'+i+'_nivel']+'L' : '—').join(' · ');
-
-    html += `<div class="hist-row">
-      <div>
-        <div style="font-weight:700;font-size:13px;color:var(--brown)">${diaNom} ${r.fecha}</div>
-        <div class="hist-row-date">Freidoras: ${litros}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-        ${aplica ? `<span style="font-size:11px;padding:3px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-weight:700;background:${miroilOk?'#e8f5e9':miroilNo?'#fdecea':'var(--cream2)'};color:${miroilOk?'var(--green)':miroilNo?'var(--red)':'var(--muted)'}">🛢️ ${miroilOk?'MirOil ✅':miroilNo?'MirOil ❌':'MirOil ?'}</span>` : ''}
-        <span style="font-size:11px;padding:3px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-weight:700;background:${filtOk?'#e8f5e9':r.aceite_filtrado===false?'#fdecea':'var(--cream2)'};color:${filtOk?'var(--green)':r.aceite_filtrado===false?'var(--red)':'var(--muted)'}">🔍 ${filtOk?'Filtrado ✅':r.aceite_filtrado===false?'Filtrado ❌':'Filtrado ?'}</span>
-      </div>
-    </div>`;
-  });
-  histEl.innerHTML = html;
 }
 
-// Inicializar fecha de aceite al cargar
+// Inicializar fecha y render al abrir pestaña
 (function initAceite(){
   const inp = document.getElementById('aceite-fecha');
-  if(inp) { const n=new Date(); inp.value=n.toISOString().split('T')[0]; }
+  if(inp) inp.value = new Date().toISOString().split('T')[0];
 })();
+
+const _origShowPage = showPage;
+function showPage(p, btn) {
+  _origShowPage(p, btn);
+  if (p==='aceite') {
+    const fecha = document.getElementById('aceite-fecha').value;
+    if (fecha) renderAceite();
+  }
+}
+
 
 </script>
 </body>
