@@ -543,6 +543,7 @@ select option{background:var(--cream);}
   </div>
   <div class="header-right">
     <div class="live-badge"><div class="live-dot"></div>DATOS REALES</div>
+    <div id="version-badge" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:var(--orange2);padding:4px 10px;border-radius:20px;font-size:10px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:1px;">v3.1</div>
     <div class="clock-wrap">
       <div id="clock-time">00:00:00</div>
       <div id="clock-date">Cargando...</div>
@@ -554,8 +555,8 @@ select option{background:var(--cream);}
 
 <div class="tabs">
   <button class="tab active" onclick="showPage('calc',this)"><span class="tab-ico">🧮</span><span class="tab-txt">Calcular</span></button>
-  <button class="tab" onclick="showPage('hist',this)"><span class="tab-ico">📅</span><span class="tab-txt">Historial</span></button>
-  <button class="tab" onclick="showPage('proy',this)"><span class="tab-ico">📈</span><span class="tab-txt">Proyección</span></button>
+  <button class="tab tab-super-only" onclick="showPage('hist',this)" id="tab-hist"><span class="tab-ico">📅</span><span class="tab-txt">Historial</span></button>
+  <button class="tab tab-super-only" onclick="showPage('proy',this)" id="tab-proy"><span class="tab-ico">📈</span><span class="tab-txt">Proyección</span></button>
   <button class="tab tab-super-only" onclick="showPage('aj',this)" id="tab-aj"><span class="tab-ico">⚙️</span><span class="tab-txt">Config</span></button>
   <button class="tab" onclick="showPage('aceite',this)"><span class="tab-ico">🛢️</span><span class="tab-txt">Aceite</span></button>
   <button class="tab tab-super-only" onclick="showPage('super',this)" id="tab-super"><span class="tab-ico">👁️</span><span class="tab-txt">Super</span></button>
@@ -1364,7 +1365,16 @@ function guardar(btn){
   setTimeout(()=>{btn.textContent=o;btn.style.cssText='';},2000);
 }
 
-// ==================== SISTEMA DE ACCESO ====================
+// ==================== VERSIÓN ====================
+const APP_VERSION = '3.1';
+const APP_VERSION_DATE = '2026-03';
+// Para actualizar: cambia APP_VERSION y sube a GitHub Pages
+document.addEventListener('DOMContentLoaded', () => {
+  const vb = document.getElementById('version-badge');
+  if(vb) vb.textContent = 'v' + APP_VERSION;
+});
+
+
 const QUIZ_BANCO = [
   // TEMPERATURAS Y PROCESOS
   {p:'¿El blanqueo de la papa se hace a 320°F?', r:true, exp:'✅ Correcto: 320°F × 2 min para el blanqueo'},
@@ -1517,7 +1527,7 @@ function responder(val, btn) {
 
 function aplicarModoAcceso(modo) {
   const esSuper = modo === 'super';
-  ['tab-aj','tab-super'].forEach(id => {
+  ['tab-hist','tab-proy','tab-aj','tab-super'].forEach(id => {
     const el = document.getElementById(id);
     if(!el) return;
     if(esSuper) {
