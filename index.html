@@ -457,10 +457,10 @@ select option{background:var(--cream);}
 .login-shake{animation:shake 0.4s ease;}
 @keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
 /* SELECTOR INICIAL */
-.mode-selector{display:flex;gap:14px;margin-bottom:0;}
-.mode-btn{flex:1;padding:18px 10px;background:var(--cream2);border:2px solid var(--cream3);border-radius:14px;cursor:pointer;transition:all 0.2s;font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--brown);letter-spacing:1px;}
+.mode-selector{display:flex;gap:10px;margin-bottom:0;flex-wrap:wrap;}
+.mode-btn{flex:1;min-width:80px;padding:16px 8px;background:var(--cream2);border:2px solid var(--cream3);border-radius:14px;cursor:pointer;transition:all 0.2s;font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--brown);letter-spacing:1px;}
 .mode-btn:hover{border-color:var(--orange);background:var(--cream);}
-.mode-btn .mode-ico{font-size:32px;display:block;margin-bottom:8px;}
+.mode-btn .mode-ico{font-size:28px;display:block;margin-bottom:6px;}
 /* QUIZ */
 .quiz-progress{display:flex;gap:8px;justify-content:center;margin-bottom:18px;}
 .quiz-dot{width:12px;height:12px;border-radius:50%;background:var(--cream3);transition:all 0.3s;}
@@ -497,8 +497,11 @@ select option{background:var(--cream);}
     <button class="mode-btn" onclick="iniciarQuiz()">
       <span class="mode-ico">🍟</span>App Papa
     </button>
+    <button class="mode-btn" onclick="mostrarAdmin()">
+      <span class="mode-ico">👔</span>Administrador
+    </button>
     <button class="mode-btn" onclick="mostrarSupervisor()">
-      <span class="mode-ico">👁️</span>Supervisor
+      <span class="mode-ico">🔐</span>Supervisor
     </button>
   </div>
 </div>
@@ -517,7 +520,30 @@ select option{background:var(--cream);}
   <div class="quiz-feedback" id="quiz-feedback"></div>
 </div>
 
-<!-- PANTALLA 3: Supervisor -->
+<!-- PANTALLA 3: ADMIN (clave + quiz) -->
+<div id="screen-admin" class="login-box" style="display:none">
+  <div style="font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--orange);letter-spacing:2px;margin-bottom:6px">👔 ADMINISTRADOR</div>
+  <p style="margin-bottom:14px">Clave de acceso + pregunta de verificación</p>
+  <!-- Paso 1: clave -->
+  <div id="admin-paso1">
+    <input class="login-input" type="password" id="admin-pass" placeholder="••••••••" maxlength="20"
+      onkeydown="if(event.key==='Enter')verificarAdminClave()">
+    <button class="login-btn" onclick="verificarAdminClave()">CONTINUAR →</button>
+    <div class="login-error" id="admin-error">❌ Clave incorrecta. Intenta de nuevo.</div>
+  </div>
+  <!-- Paso 2: quiz 1 pregunta -->
+  <div id="admin-paso2" style="display:none">
+    <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:10px;letter-spacing:1px">VERIFICACIÓN DE IDENTIDAD</div>
+    <div class="quiz-q" id="admin-quiz-pregunta"></div>
+    <div class="quiz-opts" id="admin-quiz-opciones"></div>
+    <div class="quiz-feedback" id="admin-quiz-feedback"></div>
+  </div>
+  <div style="margin-top:12px">
+    <button onclick="volverSelector()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Space Mono',monospace;">← Volver</button>
+  </div>
+</div>
+
+<!-- PANTALLA 4: Supervisor -->
 <div id="screen-super" class="login-box" style="display:none">
   <div style="font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--orange);letter-spacing:2px;margin-bottom:6px">👁️ SUPERVISOR</div>
   <p>Acceso restringido · Solo administrador</p>
@@ -877,7 +903,7 @@ select option{background:var(--cream);}
     <div id="super-tabla"></div>
 
     <!-- ==================== GESTIÓN DE REGISTROS ==================== -->
-    <div style="margin-top:36px">
+    <div id="gestion-registros" style="margin-top:36px">
       <div style="font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--orange);letter-spacing:1px;margin-bottom:6px">🗂️ Gestión de Registros</div>
       <div style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:16px">Busca, edita o elimina registros de firmas, aceite y producción</div>
 
@@ -1424,6 +1450,78 @@ function shuffle(arr) {
   return arr;
 }
 
+function mostrarAdmin() {
+  document.getElementById('screen-select').style.display='none';
+  document.getElementById('screen-admin').style.display='block';
+  setTimeout(()=>document.getElementById('admin-pass').focus(), 200);
+}
+
+function verificarAdminClave() {
+  const v = document.getElementById('admin-pass').value;
+  const err = document.getElementById('admin-error');
+  const box = document.getElementById('screen-admin');
+  if(v==='admin2024'){
+    // Correcto — pasar al quiz
+    document.getElementById('admin-paso1').style.display='none';
+    document.getElementById('admin-paso2').style.display='block';
+    mostrarAdminQuiz();
+  } else {
+    err.style.display='block';
+    document.getElementById('admin-pass').value='';
+    box.classList.remove('login-shake');
+    void box.offsetWidth;
+    box.classList.add('login-shake');
+    setTimeout(()=>box.classList.remove('login-shake'),400);
+  }
+}
+
+function mostrarAdminQuiz() {
+  const preguntasAdmin = shuffle([...QUIZ_BANCO]);
+  const q = preguntasAdmin[0];
+  window._adminQuiz = q;
+  document.getElementById('admin-quiz-pregunta').textContent = q.p;
+  document.getElementById('admin-quiz-feedback').textContent='';
+  document.getElementById('admin-quiz-feedback').className='quiz-feedback';
+  const optsEl = document.getElementById('admin-quiz-opciones');
+  optsEl.innerHTML='';
+  const opts = shuffle([{texto:'✅ Verdadero',val:true},{texto:'❌ Falso',val:false}]);
+  opts.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-opt';
+    btn.textContent=o.texto;
+    btn.onclick=()=>responderAdmin(o.val, btn);
+    optsEl.appendChild(btn);
+  });
+}
+
+function responderAdmin(val, btn) {
+  const q = window._adminQuiz;
+  const correcto = val === q.r;
+  const fb = document.getElementById('admin-quiz-feedback');
+  document.querySelectorAll('#admin-quiz-opciones .quiz-opt').forEach(b=>b.disabled=true);
+  btn.classList.add(correcto?'correcto':'incorrecto');
+  if(correcto){
+    fb.textContent='✅ '+q.exp;
+    fb.className='quiz-feedback ok';
+    setTimeout(()=>{
+      sessionStorage.setItem('jekemi_ok','admin');
+      document.getElementById('login-overlay').style.display='none';
+      aplicarModoAcceso('admin');
+    },800);
+  } else {
+    fb.textContent='❌ '+q.exp+' — Intenta de nuevo';
+    fb.className='quiz-feedback fail';
+    // Resetear: volver a clave
+    setTimeout(()=>{
+      document.getElementById('admin-paso2').style.display='none';
+      document.getElementById('admin-paso1').style.display='block';
+      document.getElementById('admin-pass').value='';
+      document.getElementById('admin-error').style.display='none';
+      fb.textContent='';
+    },1800);
+  }
+}
+
 function mostrarSupervisor() {
   document.getElementById('screen-select').style.display='none';
   document.getElementById('screen-super').style.display='block';
@@ -1433,9 +1531,15 @@ function mostrarSupervisor() {
 function volverSelector() {
   document.getElementById('screen-super').style.display='none';
   document.getElementById('screen-quiz').style.display='none';
+  document.getElementById('screen-admin').style.display='none';
   document.getElementById('screen-select').style.display='block';
   document.getElementById('super-pass').value='';
   document.getElementById('super-error').style.display='none';
+  // Reset admin
+  document.getElementById('admin-pass').value='';
+  document.getElementById('admin-error').style.display='none';
+  document.getElementById('admin-paso1').style.display='block';
+  document.getElementById('admin-paso2').style.display='none';
   quizIdx=0; quizCorrectas=0;
 }
 
@@ -1443,7 +1547,7 @@ function verificarSupervisor() {
   const v = document.getElementById('super-pass').value;
   const err = document.getElementById('super-error');
   const box = document.getElementById('screen-super');
-  if(v==='198710'){
+  if(v==='0710'){
     sessionStorage.setItem('jekemi_ok','super');
     document.getElementById('login-overlay').style.display='none';
     aplicarModoAcceso('super');
@@ -1526,16 +1630,30 @@ function responder(val, btn) {
 }
 
 function aplicarModoAcceso(modo) {
+  // SUPERVISOR — ve todo, sin bloqueos
+  // ADMIN — ve historial, proyección, config, supervisor (solo lectura), CON bloqueos de firmas
+  // OPERARIO — solo calcular + aceite, CON bloqueos
   const esSuper = modo === 'super';
+  const esAdmin = modo === 'admin';
+
   ['tab-hist','tab-proy','tab-aj','tab-super'].forEach(id => {
     const el = document.getElementById(id);
     if(!el) return;
-    if(esSuper) {
+    if(esSuper || esAdmin) {
       el.classList.remove('tab-super-only');
     } else {
       el.classList.add('tab-super-only');
     }
   });
+
+  // Panel gestión de registros — solo supervisor puede editar/eliminar
+  const gestPanel = document.getElementById('gestion-registros');
+  if(gestPanel) {
+    gestPanel.style.display = esSuper ? 'block' : 'none';
+  }
+
+  // Guardar modo en variable global para usar en bloqueos
+  window.modoAcceso = modo;
 }
 
 // Verificar sesión al cargar
