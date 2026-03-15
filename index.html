@@ -1795,7 +1795,7 @@ async function verificarBloqueoCalc() {
       // Ordenar localmente para evitar depender de índice Firestore
       const calcs = calcSnap.docs
         .map(d => d.data())
-        .filter(d => d.fecha && d.fecha !== fechaCalc) // solo fechas anteriores a la actual
+        .filter(d => d.fecha && d.fecha < fechaCalc) // solo fechas ANTERIORES (no futuras ni la actual)
         .sort((a, b) => b.fecha.localeCompare(a.fecha)); // más reciente primero
 
       if (calcs.length > 0) {
