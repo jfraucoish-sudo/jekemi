@@ -1755,6 +1755,7 @@ async function cargarFirmaEnUI(tipo, punto, fecha) {
 async function verificarBloqueoCalc() {
   const banner = document.getElementById('bloqueo-calc-banner');
   const btnCalc = document.getElementById('btn-calcular');
+  const msg = document.getElementById('bloqueo-calc-msg');
 
   // Supervisor no tiene bloqueos
   if(sessionStorage.getItem('jekemi_ok') === 'super') {
@@ -1764,50 +1765,52 @@ async function verificarBloqueoCalc() {
   }
 
   const punto = document.getElementById('punto').value;
+  const puntoLabel = punto === 'plaza' ? 'Mi Plaza' : 'Soacha';
   const hoy = getTodayStr();
-  const msg = document.getElementById('bloqueo-calc-msg');
+  // Usar la fecha del campo de cálculo (puede diferir del sistema en modo supervisor)
+  const fechaCalc = document.getElementById('fecha').value || hoy;
 
-  // Regla 1: aceite de hoy debe estar firmado
-  const firmaAceite = await loadFirma('aceite', punto, hoy);
+  // ── REGLA 1: Firma de aceite del día debe existir para este punto ──
+  const firmaAceite = await loadFirma('aceite', punto, fechaCalc);
   if (!firmaAceite) {
     banner.style.display = 'block';
-    msg.textContent = '🛢️ Para usar la calculadora, primero completa y firma el registro de Aceite de hoy en la pestaña 🛢️ Aceite.';
+    msg.innerHTML = `🛢️ <strong>${puntoLabel}</strong>: Primero completa y firma el registro de Aceite de hoy en la pestaña 🛢️ Aceite.`;
     btnCalc.disabled = true;
     return;
   }
 
-  // Regla 2: el último cálculo realizado debe estar firmado
-  // Buscar el registro de calc más reciente para este punto
+  // ── REGLA 2: El último cálculo de este punto debe estar firmado ──
   try {
-    const snap = await db.collection('firmas')
-      .where('punto', '==', punto)
-      .orderBy('fecha', 'desc')
-      .limit(5)
-      .get();
-
-    // Buscar si hay un cálculo sin firma (en aceite_data sin firma calc)
+    // Buscar calc_log de este punto, ordenado por fecha desc
+    // Usamos getAll por si no hay índice compuesto en Firestore
     const calcSnap = await db.collection('calc_log')
       .where('punto', '==', punto)
-      .orderBy('fecha', 'desc')
-      .limit(1)
       .get();
 
     if (!calcSnap.empty) {
-      const lastCalc = calcSnap.docs[0].data();
-      if (lastCalc.fecha !== hoy) {
-        // Hay un cálculo anterior — verificar si fue firmado
+      // Ordenar localmente para evitar depender de índice Firestore
+      const calcs = calcSnap.docs
+        .map(d => d.data())
+        .filter(d => d.fecha && d.fecha !== hoy) // solo fechas anteriores
+        .sort((a, b) => b.fecha.localeCompare(a.fecha)); // más reciente primero
+
+      if (calcs.length > 0) {
+        const lastCalc = calcs[0];
         const firmaCalcAnterior = await loadFirma('calc', punto, lastCalc.fecha);
         if (!firmaCalcAnterior) {
           banner.style.display = 'block';
-          msg.textContent = `✍️ El cálculo del ${lastCalc.fecha} no fue firmado. Ve a ese registro y firma para desbloquear.`;
+          msg.innerHTML = `✍️ <strong>${puntoLabel}</strong>: El cálculo del <strong>${lastCalc.fecha}</strong> no fue firmado. Fírmalo para continuar.`;
           btnCalc.disabled = true;
           return;
         }
       }
     }
-  } catch(e) { /* índice no creado aún, ignorar */ }
+  } catch(e) {
+    console.warn('verificarBloqueoCalc Regla 2 error:', e);
+    // Si falla la consulta no bloqueamos por calc anterior
+  }
 
-  // Todo OK — desbloquear
+  // ── TODO OK ──
   banner.style.display = 'none';
   btnCalc.disabled = false;
 }
