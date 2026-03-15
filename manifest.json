@@ -1,10 +1,14 @@
 {
   "name": "Jekemi Control Papas",
   "short_name": "Jekemi",
-  "start_url": ".",
+  "start_url": "/jekemi/",
   "display": "standalone",
+  "orientation": "portrait",
+  "lang": "es",
   "background_color": "#FDF6EC",
   "theme_color": "#D94F00",
+  "description": "Control de producción de papas · La Cabaña 80/20",
+  "categories": ["food", "productivity"],
   "icons": [
     {
       "src": "icon-192.png",
