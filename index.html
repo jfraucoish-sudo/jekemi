@@ -1052,24 +1052,29 @@ function getPorciones(punto,fecha){
 
 window.onload=async function(){
   const n=new Date();
-  const hoyStr = n.toISOString().split('T')[0];
+  // Usar fecha LOCAL (no UTC) para evitar desfase en Colombia (UTC-5)
+  const hoyStr = n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
   const fechaInp = document.getElementById('fecha');
   fechaInp.value = hoyStr;
-  // Solo supervisor puede cambiar la fecha
-  if(sessionStorage.getItem('jekemi_ok') !== 'super') {
+  // Solo operario tiene fecha fija — supervisor y admin pueden cambiarla
+  const modo = sessionStorage.getItem('jekemi_ok');
+  if(modo !== 'super' && modo !== 'admin') {
     fechaInp.setAttribute('readonly', true);
     fechaInp.setAttribute('max', hoyStr);
     fechaInp.setAttribute('min', hoyStr);
+    fechaInp.style.cursor = 'default';
+    fechaInp.style.opacity = '0.7';
   } else {
     fechaInp.removeAttribute('readonly');
+    fechaInp.removeAttribute('max');
+    fechaInp.removeAttribute('min');
     fechaInp.style.cursor = 'pointer';
     fechaInp.style.opacity = '1';
   }
   document.getElementById('hora').value=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
   renderHistorial();
   renderProyeccion();
-  const s=sessionStorage.getItem('jekemi_ok');
-  if(s) aplicarModoAcceso(s);
+  if(modo) aplicarModoAcceso(modo);
   await verificarBloqueoCalc();
 };
 
@@ -1679,7 +1684,8 @@ const db = firebase.firestore();
 
 // ==================== FIRMAS ====================
 function getTodayStr() {
-  return new Date().toISOString().split('T')[0];
+  const n = new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
 }
 
 function getFirmaDocId(tipo, punto, fecha) {
@@ -2023,7 +2029,7 @@ async function renderSupervisor() {
 (function initSupervisor() {
   const hoy = new Date();
   const hace14 = new Date(hoy); hace14.setDate(hoy.getDate() - 14);
-  const toStr = d => d.toISOString().split('T')[0];
+  const toStr = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const desdeEl = document.getElementById('super-desde');
   const hastaEl = document.getElementById('super-hasta');
   if (desdeEl) desdeEl.value = toStr(hace14);
@@ -2255,7 +2261,7 @@ async function renderAceiteHistorial(punto) {
 // Inicializar fecha al cargar
 (function initAceite(){
   const inp = document.getElementById('aceite-fecha');
-  if(inp) inp.value = new Date().toISOString().split('T')[0];
+  if(inp){ const n=new Date(); inp.value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 })();
 
 
@@ -2533,7 +2539,7 @@ function abrirModalCambio(punto, freidora, label) {
   caModalPunto = punto;
   caModalFreidora = freidora;
   document.getElementById('ca-modal-titulo').textContent = `${label} · ${punto==='plaza'?'Mi Plaza':'Soacha'}`;
-  document.getElementById('ca-fecha-cambio').value = new Date().toISOString().split('T')[0];
+  const _n=new Date(); document.getElementById('ca-fecha-cambio').value=_n.getFullYear()+'-'+String(_n.getMonth()+1).padStart(2,'0')+'-'+String(_n.getDate()).padStart(2,'0');
   document.getElementById('ca-litros').value = '20';
   document.getElementById('ca-responsable').value = '';
   document.getElementById('ca-obs').value = '';
