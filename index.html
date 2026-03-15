@@ -1085,10 +1085,8 @@ function showPage(p,btn){
   btn.classList.add('active');
   if(p==='aceite'){
     const fecha=document.getElementById('aceite-fecha').value;
-    if(fecha) renderAceite().then(()=>{
-      const punto=document.getElementById('aceite-punto').value;
-      cargarFirmaEnUI('aceite', punto, fecha);
-    });
+    const punto=document.getElementById('aceite-punto').value;
+    if(fecha) renderAceite();
   }
   if(p==='calc') verificarBloqueoCalc();
   if(p==='super') renderSupervisor();
@@ -1797,7 +1795,7 @@ async function verificarBloqueoCalc() {
       // Ordenar localmente para evitar depender de índice Firestore
       const calcs = calcSnap.docs
         .map(d => d.data())
-        .filter(d => d.fecha && d.fecha !== hoy) // solo fechas anteriores
+        .filter(d => d.fecha && d.fecha !== fechaCalc) // solo fechas anteriores a la actual
         .sort((a, b) => b.fecha.localeCompare(a.fecha)); // más reciente primero
 
       if (calcs.length > 0) {
@@ -2152,6 +2150,9 @@ async function renderAceite() {
   frEl.innerHTML = frHtml;
 
   renderAceiteHistorial(punto);
+
+  // Recargar bloque de firma para el punto/fecha actuales
+  recargarFirmaAceite(punto, fecha);
 }
 
 function updateRepone(i) {
@@ -2183,6 +2184,35 @@ async function guardarAceite(punto, fecha) {
     btn.style.background='var(--green)';
     setTimeout(()=>{ btn.textContent='💾 GUARDAR REGISTRO'; btn.style.background=''; btn.disabled=false; renderAceiteHistorial(punto); }, 1800);
   }
+}
+
+async function recargarFirmaAceite(punto, fecha) {
+  // Resetear UI de firma antes de consultar
+  const statusEl = document.getElementById('firma-aceite-status');
+  const inputsEl = document.getElementById('firma-aceite-inputs');
+  const btnEl    = document.getElementById('btn-firma-aceite');
+  const realizoEl   = document.getElementById('aceite-realizo');
+  const supervisoEl = document.getElementById('aceite-superviso');
+
+  statusEl.innerHTML = '';
+  inputsEl.style.display = 'flex';
+  btnEl.style.display = 'block';
+  btnEl.textContent = '✍️ FIRMAR Y GUARDAR';
+  btnEl.style.background = '';
+  btnEl.disabled = false;
+  if(realizoEl) realizoEl.value = '';
+  if(supervisoEl) supervisoEl.value = '';
+
+  // Consultar si ya existe firma para este punto+fecha
+  const firma = await loadFirma('aceite', punto, fecha);
+  if (firma) {
+    statusEl.innerHTML = `<div class="firma-ok">✅ Firmado · <strong>${firma.realizo}</strong> realizó · <strong>${firma.superviso}</strong> supervisó</div>`;
+    inputsEl.style.display = 'none';
+    btnEl.style.display = 'none';
+  }
+
+  // También reverificar bloqueo de calculadora
+  verificarBloqueoCalc();
 }
 
 async function renderAceiteHistorial(punto) {
