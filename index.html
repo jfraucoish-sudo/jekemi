@@ -1785,33 +1785,33 @@ async function verificarBloqueoCalc() {
 
   // ── REGLA 2: El último cálculo de este punto debe estar firmado ──
   try {
-    // Buscar calc_log de este punto, ordenado por fecha desc
-    // Usamos getAll por si no hay índice compuesto en Firestore
     const calcSnap = await db.collection('calc_log')
       .where('punto', '==', punto)
       .get();
 
     if (!calcSnap.empty) {
-      // Ordenar localmente para evitar depender de índice Firestore
       const calcs = calcSnap.docs
         .map(d => d.data())
-        .filter(d => d.fecha && d.fecha < fechaCalc) // solo fechas ANTERIORES (no futuras ni la actual)
-        .sort((a, b) => b.fecha.localeCompare(a.fecha)); // más reciente primero
+        .filter(d => d.fecha && d.fecha < fechaCalc)
+        .sort((a, b) => b.fecha.localeCompare(a.fecha));
 
       if (calcs.length > 0) {
         const lastCalc = calcs[0];
-        const firmaCalcAnterior = await loadFirma('calc', punto, lastCalc.fecha);
-        if (!firmaCalcAnterior) {
-          banner.style.display = 'block';
-          msg.innerHTML = `✍️ <strong>${puntoLabel}</strong>: El cálculo del <strong>${lastCalc.fecha}</strong> no fue firmado. Fírmalo para continuar.`;
-          btnCalc.disabled = true;
-          return;
+        // Verificar que el calc_log de esa fecha realmente existe (no fue borrado)
+        const calcDoc = await db.collection('calc_log').doc(punto + '_' + lastCalc.fecha).get();
+        if (calcDoc.exists) {
+          const firmaCalcAnterior = await loadFirma('calc', punto, lastCalc.fecha);
+          if (!firmaCalcAnterior) {
+            banner.style.display = 'block';
+            msg.innerHTML = `✍️ <strong>${puntoLabel}</strong>: El cálculo del <strong>${lastCalc.fecha}</strong> no fue firmado. Fírmalo para continuar.`;
+            btnCalc.disabled = true;
+            return;
+          }
         }
       }
     }
   } catch(e) {
     console.warn('verificarBloqueoCalc Regla 2 error:', e);
-    // Si falla la consulta no bloqueamos por calc anterior
   }
 
   // ── TODO OK ──
