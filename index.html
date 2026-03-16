@@ -613,7 +613,7 @@ select option{background:var(--cream);}
     <!-- TOTAL DEL DÍA -->
     <div class="cards-grid" style="grid-template-columns:1fr;">
       <div class="rcard rcard-day" style="display:flex;align-items:center;justify-content:space-between;gap:20px;">
-        <div><div class="card-ico">📦</div><div class="card-lbl">Total día completo</div><div class="card-val" id="c-total-kg">—</div><div class="card-unit">kilogramos de papa</div></div>
+        <div><div class="card-ico">📦</div><div class="card-lbl">Total a picar hoy (día + apertura mañana)</div><div class="card-val" id="c-total-kg">—</div><div class="card-unit">kilogramos de papa</div></div>
         <div style="text-align:right"><div class="card-sub" id="c-total-p" style="font-size:14px;color:var(--brown)"></div></div>
       </div>
     </div>
@@ -654,13 +654,33 @@ select option{background:var(--cream);}
       </div>
     </div>
 
+    <!-- PAPA CIERRE — para apertura del día siguiente -->
+    <div class="rcard" id="card-cierre" style="display:none;margin-bottom:20px;border:2px solid var(--brown);background:linear-gradient(135deg,rgba(61,31,0,0.06),rgba(61,31,0,0.02));">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <span style="font-size:26px;">🌙</span>
+        <div>
+          <div class="card-lbl" style="color:var(--brown);font-size:11px;">PAPA CIERRE — DEJAR PICADA AL FINALIZAR</div>
+          <div style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;">Para apertura <span id="c-cierre-dia">—</span> · Cubre 12pm–2pm</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><div class="card-lbl">Picar al cierre</div><div class="card-val" id="c-cierre-kg" style="color:var(--brown);">—</div><div class="card-unit">kg</div></div>
+        <div><div class="card-lbl">🔥 Blanquear 80/20</div><div class="card-val" id="c-cierre-8020" style="color:var(--red);">—</div><div class="card-unit">kg · 320°F × 2:00</div></div>
+      </div>
+      <div class="card-sub" id="c-cierre-p" style="margin-top:10px;"></div>
+      <div style="margin-top:12px;padding:10px 12px;background:rgba(61,31,0,0.06);border-radius:8px;font-size:12px;color:var(--brown);font-family:'Space Mono',monospace;">
+        🌙 Picar y blanquear antes de cerrar · Guardar en frío · Listo para abrir mañana sin espera
+      </div>
+    </div>
+
     <!-- ALERTA DE TURNO ACTUAL -->
     <div id="alerta-turno" style="display:none;background:rgba(217,79,0,0.08);border:2px solid var(--orange);border-radius:12px;padding:14px 20px;margin-bottom:20px;font-size:14px;color:var(--brown);"></div>
 
     <div class="tl-section"><div class="tl-title">⏱️ Distribución real por horas — 12pm a 5pm · 5pm al cierre</div><div class="tl-grid" id="tl-grid"></div></div>
-    <div class="nota"><strong>📌 Regla de los 2 picados:</strong>
-      <br>🌅 <strong>Picado apertura</strong> → al abrir · para el servicio de mediodía (12pm–5pm)
-      <br>🌆 <strong>Picado tarde</strong> → antes del alto movimiento · para el pico nocturno (5pm–cierre)
+    <div class="nota"><strong>📌 Regla de los 2 picados + cierre:</strong>
+      <br>🌅 <strong>Picado 1 — Apertura</strong> → al abrir · para el servicio de mediodía (12pm–5pm)
+      <br>🌆 <strong>Picado 2 — Tarde</strong> → antes del alto movimiento · para el pico nocturno (5pm–cierre)
+      <br>🌙 <strong>Papa Cierre</strong> → al finalizar el día · picada y blanqueada · para arrancar el día siguiente sin esperar
       <br><br>Proceso: Picar → Lavar → Remojar 15 min → <strong>Blanquear 320°F × 2:00 min</strong> → Escurrir → Conservar en frío → <strong>Fritura final 370°F × 2:00 min</strong>
       <br><br><strong>Salchipapa = 220g · Papa mediana = 200g · Papa pequeña = 180g</strong>
     </div>
@@ -1118,6 +1138,21 @@ async function calcular(){
   const kgPm = kg(pPm);
   const kg8Pm = kgPm * (cfg.pct8020/100);
 
+  // PAPA CIERRE — para apertura del día siguiente (12pm–2pm)
+  // Calcular proyección del día siguiente
+  const dSig = new Date(fecha+'T12:00:00');
+  dSig.setDate(dSig.getDate()+1);
+  const fechaSig = dSig.getFullYear()+'-'+String(dSig.getMonth()+1).padStart(2,'0')+'-'+String(dSig.getDate()).padStart(2,'0');
+  const pSig = getPorciones(punto, fechaSig);
+  // Pct de las primeras 2h de servicio (12pm–2pm) del día siguiente
+  const pctAperturaSig = distH.filter(f=>f.h>=12&&f.h<14).reduce((a,f)=>a+f.pct,0);
+  const pCierre = Math.max(1, Math.round(pSig * pctAperturaSig));
+  const kgCierre = kg(pCierre);
+  const kg8Cierre = kgCierre * (cfg.pct8020/100);
+  const monDowSig = jsToMon(dSig.getDay());
+  const daySig = dSig.getDate();
+  const mesSig = dSig.getMonth()+1;
+
   // Turno actual
   let pctT=0;
   distH.forEach(f=>{if(f.h>=hD&&f.h<hD+2)pctT+=f.pct;});
@@ -1135,8 +1170,8 @@ async function calcular(){
     `Proyección: <strong>${p} porciones</strong> en el día · Índice día: <strong>${(DOW[monDow]*100).toFixed(0)}%</strong> del promedio · ${(pctR*100).toFixed(0)}% del día queda por delante`+
     (isQ(day)?' · <strong>Quincena: +24% de ventas</strong>':'');
 
-  document.getElementById('c-total-kg').textContent=kgT.toFixed(1);
-  document.getElementById('c-total-p').textContent=p+' porciones totales del día (salchipapas + porciones papa)';
+  document.getElementById('c-total-kg').textContent=(kgT + kgCierre).toFixed(1);
+  document.getElementById('c-total-p').textContent=p+' porciones del día + '+pCierre+' porciones apertura mañana · Total a picar hoy';
 
   // Picado 1 — Apertura
   document.getElementById('c-ap-kg').textContent=kgAp.toFixed(1);
@@ -1147,6 +1182,13 @@ async function calcular(){
   document.getElementById('c-pm-kg').textContent=kgPm.toFixed(1);
   document.getElementById('c-pm-8020').textContent=kg8Pm.toFixed(1);
   document.getElementById('c-pm-p').textContent='~'+pPm+' porciones · Picar antes de las 17:30h';
+
+  // Papa Cierre — para apertura del día siguiente
+  document.getElementById('c-cierre-kg').textContent=kgCierre.toFixed(1);
+  document.getElementById('c-cierre-8020').textContent=kg8Cierre.toFixed(1);
+  document.getElementById('c-cierre-p').textContent='~'+pCierre+' porciones · '+DOWNAMES[monDowSig]+' '+daySig+' de '+MNAMES[mesSig]+' · 12pm–2pm';
+  document.getElementById('c-cierre-dia').textContent=DOWNAMES[monDowSig]+' '+daySig+'/'+mesSig;
+  document.getElementById('card-cierre').style.display='block';
 
   // Alerta turno actual
   const alerta=document.getElementById('alerta-turno');
