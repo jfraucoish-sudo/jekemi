@@ -493,6 +493,7 @@ select option{background:var(--cream);}
   </div>
   <h2>JEKEMI</h2>
   <p>Control de Papas · Selecciona tu acceso</p>
+  <div style="display:inline-block;background:rgba(217,79,0,0.1);border:1px solid rgba(217,79,0,0.3);color:var(--orange);padding:3px 12px;border-radius:20px;font-size:11px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:1px;margin-bottom:16px;" id="login-version-badge">v4.0</div>
   <div class="mode-selector">
     <button class="mode-btn" onclick="iniciarQuiz()">
       <span class="mode-ico">🍟</span>App Papa
@@ -569,7 +570,7 @@ select option{background:var(--cream);}
   </div>
   <div class="header-right">
     <div class="live-badge"><div class="live-dot"></div>DATOS REALES</div>
-    <div id="version-badge" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:var(--orange2);padding:4px 10px;border-radius:20px;font-size:10px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:1px;">v3.1</div>
+    <div id="version-badge" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:var(--orange2);padding:4px 10px;border-radius:20px;font-size:10px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:1px;">v4.0</div>
     <div class="clock-wrap">
       <div id="clock-time">00:00:00</div>
       <div id="clock-date">Cargando...</div>
@@ -1437,12 +1438,14 @@ function guardar(btn){
 }
 
 // ==================== VERSIÓN ====================
-const APP_VERSION = '3.1';
+const APP_VERSION = '4.0';
 const APP_VERSION_DATE = '2026-03';
 // Para actualizar: cambia APP_VERSION y sube a GitHub Pages
 document.addEventListener('DOMContentLoaded', () => {
   const vb = document.getElementById('version-badge');
   if(vb) vb.textContent = 'v' + APP_VERSION;
+  const lvb = document.getElementById('login-version-badge');
+  if(lvb) lvb.textContent = 'v' + APP_VERSION;
 });
 
 
